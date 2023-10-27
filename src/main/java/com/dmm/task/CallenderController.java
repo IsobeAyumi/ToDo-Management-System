@@ -2,8 +2,10 @@ package com.dmm.task;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,7 +33,7 @@ public class CallenderController {
 	
 	//カレンダー表示用
 	@GetMapping("/main")
-	public String main(Model model,@AuthenticationPrincipal AccountUserDetails user) {
+	public String main(Model model,@AuthenticationPrincipal AccountUserDetails user, @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
 
 	    // 月（週と日）を格納する二次元配列を用意する
 	    List<List<LocalDate>> month = new ArrayList<>();
@@ -41,10 +43,26 @@ public class CallenderController {
 	    
 	    // 日にちを格納する変数を用意する
 	    LocalDate day, start, end;  // ★
+
+	    // ★今月 or 前月 or 翌月を判定
+	    if(date == null) {
+     	    // その月の1日を取得する
+	        day = LocalDate.now();  // 現在日時を取得
+	        day = LocalDate.of(day.getYear(), day.getMonthValue(), 1);  // 現在日時からその月の1日を取得
+	        
+	    }else {
+	        day = date;  // 引数で受け取った日付をそのまま使う
+	      }
 	    
-	    // その月の1日を取得する
-	    day = LocalDate.now();  // 現在日時を取得
-	    day = LocalDate.of(day.getYear(), day.getMonthValue(), 1);  // 現在日時からその月の1日を取得
+	    // カレンダーの ToDo直下に「yyyy年mm月」と表示
+	    model.addAttribute("month", day.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()));
+	    
+	    // ★前月のリンク
+	    model.addAttribute("prev", day.minusMonths(1));
+	    
+	    // ★翌月のリンク
+	    model.addAttribute("next", day.plusMonths(1));
+	    
 	    
 	    // 前月分の LocalDateを求める
 	    DayOfWeek w = day.getDayOfWeek();  // 当該日の曜日を取得
